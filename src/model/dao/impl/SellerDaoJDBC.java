@@ -73,30 +73,44 @@ public class SellerDaoJDBC implements SellerDao {
 		}
 	}
 
-	private Seller intantiateSeller(ResultSet rs, Department department) throws SQLException {
-		Seller seller = new Seller();
-		seller.setId(rs.getInt("Id"));
-		seller.setName(rs.getString("Name"));
-		seller.setEmail(rs.getString("Email"));
-		seller.setBaseSalary(rs.getDouble("BaseSalary"));
-		seller.setBirthDate(rs.getDate("BirthDate"));
-		seller.setDepartment(department);
-		
-		return seller;
-	}
-
-	private Department intantiateDepartment(ResultSet rs) throws SQLException {
-		Department department = new Department(); 
-		department.setId(rs.getInt("DepartmentId"));
-		department.setName(rs.getString("DepartmentName"));
-		
-		return department;
-	}
-
 	@Override
 	public List<Seller> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		
+		try {
+			st = connection.prepareStatement(
+					"SELECT seller.*,department.Name as DepartmentName "
+					+ "FROM seller INNER JOIN department "
+					+ "ON seller.DepartmentId = department.Id "
+					+ "ORDER BY Name");
+
+			rs = st.executeQuery();
+			
+			List<Seller> sellerList = new ArrayList<>();
+			Map<Integer, Department> map = new HashMap<>();
+			
+			while (rs.next()) {
+				
+				Department dep = map.get(rs.getInt("DepartmentId"));
+				
+				if (dep == null) {
+					dep = intantiateDepartment(rs);
+					map.put(rs.getInt("DepartmentId"), dep);	
+				}
+				
+				Seller seller = intantiateSeller(rs, dep);
+				sellerList.add(seller);
+			}
+			return sellerList;
+		}
+		catch (SQLException e) {			
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+		}
 	}
 
 	@Override
@@ -141,6 +155,24 @@ public class SellerDaoJDBC implements SellerDao {
 		}
 	}
 
-	
+	private Seller intantiateSeller(ResultSet rs, Department department) throws SQLException {
+		Seller seller = new Seller();
+		seller.setId(rs.getInt("Id"));
+		seller.setName(rs.getString("Name"));
+		seller.setEmail(rs.getString("Email"));
+		seller.setBaseSalary(rs.getDouble("BaseSalary"));
+		seller.setBirthDate(rs.getDate("BirthDate"));
+		seller.setDepartment(department);
+		
+		return seller;
+	}
+
+	private Department intantiateDepartment(ResultSet rs) throws SQLException {
+		Department department = new Department(); 
+		department.setId(rs.getInt("DepartmentId"));
+		department.setName(rs.getString("DepartmentName"));
+		
+		return department;
+	}
 	
 }
