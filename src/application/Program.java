@@ -38,6 +38,10 @@ public class Program {
 		sellerDao.update(seller);
 		System.out.println("Updated! New name = " + seller.getName());
 		
+		System.out.println("\n\n  === TEST 6: seller delete ===\n");
+		sellerDao.deleteById(null);;
+		System.out.println("Updated! New name = " + seller.getName());
+		
 	}
 
 }
